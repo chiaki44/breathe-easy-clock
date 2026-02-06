@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { clsx } from "clsx";
 
@@ -10,45 +10,47 @@ interface ClockProps {
 
 export const Clock: React.FC<ClockProps> = ({ sessionMinutes, isActive, onComplete }) => {
     const shortHandControls = useAnimation();
-    const longHandControls = useAnimation();
+
+    // Use state for ticking seconds to ensure crisp 1-second steps
+    const [secondDegrees, setSecondDegrees] = useState(0);
 
     // Reset or Start animations based on isActive
     useEffect(() => {
+        let interval: number;
+
         if (isActive) {
-            // Start Short Hand (Breathing Hand): 360 degrees in sessionMinutes
+            // Start Short Hand (Breathing Hand): 360 degrees in sessionMinutes (Continuous)
             shortHandControls.start({
                 rotate: 360,
                 transition: {
                     duration: sessionMinutes * 60,
                     ease: "linear",
-                    repeat: 0, // Run once then stop (onComplete handles reset/finish)
+                    repeat: 0,
                 },
             });
 
-            // Start Long Hand (Second Hand): 360 degrees every 60 seconds
-            longHandControls.start({
-                rotate: 360,
-                transition: {
-                    duration: 60,
-                    ease: "linear",
-                    repeat: Infinity,
-                },
-            });
+            // Start Long Hand (Second Hand): Tick every second
+            interval = window.setInterval(() => {
+                setSecondDegrees((prev) => prev + 6);
+            }, 1000);
 
             // Setup completion timeout
             const timer = setTimeout(() => {
                 onComplete();
             }, sessionMinutes * 60 * 1000);
-            return () => clearTimeout(timer);
+
+            return () => {
+                clearTimeout(timer);
+                clearInterval(interval);
+            };
 
         } else {
             // Reset immediately when stopped
             shortHandControls.stop();
-            longHandControls.stop();
             shortHandControls.set({ rotate: 0 });
-            longHandControls.set({ rotate: 0 });
+            setSecondDegrees(0);
         }
-    }, [isActive, sessionMinutes, shortHandControls, longHandControls, onComplete]);
+    }, [isActive, sessionMinutes, shortHandControls, onComplete]);
 
     return (
         <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center">
@@ -74,7 +76,7 @@ export const Clock: React.FC<ClockProps> = ({ sessionMinutes, isActive, onComple
                     </div>
                 ))}
 
-                {/* Minute Markers (Optional, subtle) */}
+                {/* Minute Markers */}
                 {[...Array(60)].map((_, i) => {
                     if (i % 5 === 0) return null; // Skip hour markers
                     return (
@@ -107,8 +109,8 @@ export const Clock: React.FC<ClockProps> = ({ sessionMinutes, isActive, onComple
 
             {/* Long Hand (Seconds) - Silver/Blue */}
             <motion.div
-                animate={longHandControls}
-                initial={{ rotate: 0 }}
+                animate={{ rotate: secondDegrees }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }} // Mechanical tick feel
                 className="absolute z-40 top-1/2 left-1/2 w-0.5 h-36 -mt-36 origin-bottom rounded-full bg-sky-400 shadow-md shadow-sky-500/20"
                 style={{
                     originY: 1,
