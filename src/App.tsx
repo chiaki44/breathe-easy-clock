@@ -121,8 +121,10 @@ function App() {
             isActive={isActive}
             onComplete={handleSessionComplete}
           />
+        </div>
 
-          {/* Breathing Text Overlay (Subtle) */}
+        {/* Breathing Text Overlay (Below Clock) */}
+        <div className="h-12 flex items-center justify-center">
           <AnimatePresence mode="wait">
             {isActive && (
               <motion.div
@@ -130,9 +132,9 @@ function App() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.1 }}
-                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                className="flex items-center justify-center pointer-events-none"
               >
-                <span className="text-4xl font-light tracking-widest text-slate-100/10 uppercase select-none font-serif blur-[1px]">
+                <span className="text-4xl font-light tracking-widest text-teal-400 uppercase select-none font-serif blur-[0.5px]">
                   {currentStep.label}
                 </span>
               </motion.div>
