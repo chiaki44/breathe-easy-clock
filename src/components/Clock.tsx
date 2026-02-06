@@ -20,21 +20,23 @@ export const Clock: React.FC<ClockProps> = ({ sessionMinutes, isActive, onComple
         let minuteInterval: number;
 
         if (isActive) {
-            // Initial tick
-            setSecondDegrees((p) => p + 6);
+            // Initial tick for immediate feedback? 
+            // Better to start at 0 and tick after 1s/1m.
+            // Or if we want "ElapsedTime 1s", we tick immediately? 
+            // Standard clock waits 1s for first tick.
 
-            // Tick Seconds
+            // Tick Seconds (Long Hand) - 6 degrees per step (60 steps = 360)
             secondInterval = window.setInterval(() => {
                 setSecondDegrees((prev) => prev + 6);
             }, 1000);
 
-            // Tick Minutes
-            // To ensure it ticks exactly when a minute passes, we can sync it or just run independent interval.
-            // Simplest logic: every 60s, increment minute by 6 deg.
-            minuteInterval = window.setInterval(() => {
-                setMinuteDegrees((prev) => prev + 6);
-            }, 60000);
+            // Tick Minutes (Short Hand) - Steps based on session length
+            // Use 360 / sessionMinutes to ensure it completes 1 lap in session time
+            const minuteStep = 360 / sessionMinutes;
 
+            minuteInterval = window.setInterval(() => {
+                setMinuteDegrees((prev) => prev + minuteStep);
+            }, 60000); // Update every minute
 
             // Timeout for completion
             const timer = setTimeout(() => {
@@ -45,6 +47,7 @@ export const Clock: React.FC<ClockProps> = ({ sessionMinutes, isActive, onComple
                 clearTimeout(timer);
                 clearInterval(secondInterval);
                 clearInterval(minuteInterval);
+                // Also reset on unmount/cleanup if needed, but we handle that in else block
             };
 
         } else {
